@@ -1,0 +1,7 @@
+duckdb
+geojson
+h3
+rich
+shapely
+shpyx
+typer
