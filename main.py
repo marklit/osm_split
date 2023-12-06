@@ -288,8 +288,7 @@ def main(osm_file:  str,
         polygon = ['%s %s' % (y, x)
                    for x, y in h3_poly['coordinates'] +
                                [h3_poly['coordinates'][0]]]
-        h3_poly = shape(wkt.loads('POLYGON((%s))' %
-                                    ', '.join(polygon)))
+        h3_poly = shape(wkt.loads('POLYGON((%s))' % ', '.join(polygon)))
 
     # Make sure there is an osmconf.ini file in the working folder.
     _osm_conf = 'osmconf.ini'
