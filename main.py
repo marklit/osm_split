@@ -284,7 +284,7 @@ def main(osm_file:  str,
     _osm_conf = dirname(abspath(osm_file)) + '/osmconf.ini'
 
     if not exists(_osm_conf):
-        open(_osm_conf, 'w').write()
+        open(_osm_conf, 'w').write('')
 
     categorisers = {
         'lines':            lines,
