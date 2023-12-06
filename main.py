@@ -57,6 +57,10 @@ def get_geom_by_type(osm_file: str, layer: str):
                           sequential_layer_scan=true)"""
 
     con.execute(sql, (osm_file, layer))
+
+    # WIP: The 1.8 GB Japan OSM PBF exceeded 32 GB of RAM when returning
+    # every row at once. Find a cursor / iterator method of doing this
+    # instead.
     return con.fetchall()
 
 
@@ -274,14 +278,20 @@ def points(other_tags:dict, other_tags_no_subs:dict):
 def main(osm_file:  str,
          geom_type: str = None,
          only_h3:   str = None):
-    if only_h3:
-        raise Exception('H3 filtering is broken atm.')
-
     h3_poly = None if only_h3 is None \
                    else Polygon(list(h3.h3_to_geo_boundary(only_h3)))
 
-    # Make sure there is an osmconf.ini file.
-    _osm_conf = dirname(abspath(osm_file)) + '/osmconf.ini'
+    # WIP: Would it be more performant to filter in DuckDB instead?
+    if h3_poly:
+        # Form a closed LINESTRING
+        polygon = ['%s %s' % (y, x)
+                   for x, y in h3_poly['coordinates'] +
+                               [h3_poly['coordinates'][0]]]
+        h3_poly = shape(wkt.loads('POLYGON((%s))' %
+                                    ', '.join(polygon)))
+
+    # Make sure there is an osmconf.ini file in the working folder.
+    _osm_conf = 'osmconf.ini'
 
     if not exists(_osm_conf):
         open(_osm_conf, 'w').write('')
@@ -302,7 +312,7 @@ def main(osm_file:  str,
                          description='Categorising (%s)..' % geom_type_):
             geom = shape(wkt.loads(rec[1]))
 
-            if only_h3 and geom.centroid not in h3_poly:
+            if only_h3 and not h3_poly.contains(geom.centroid):
                 continue
 
             other_tags         = ot_to_json(rec[0], remove_sub=False)
