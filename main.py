@@ -284,7 +284,7 @@ def main(osm_file:  str,
 
     # WIP: Would it be more performant to filter in DuckDB instead?
     if h3_poly:
-        # Form a closed LINESTRING
+        # Form a closed polygon
         polygon = ['%s %s' % (y, x)
                    for x, y in h3_poly['coordinates'] +
                                [h3_poly['coordinates'][0]]]
