@@ -4,6 +4,7 @@ import json
 from   os       import makedirs, unlink
 from   os.path  import abspath, dirname, exists, splitext
 import re
+from   shlex               import quote
 
 import duckdb
 from   geojson          import (dumps,
@@ -360,7 +361,10 @@ def main(osm_file:  str,
                 unlink('%s.gpkg' % basename)
 
             cmd = 'ogr2ogr -f GeoJSON ' \
-                  '%(base)s.gpkg %(base)s.geojson' % {'base': basename}
+                  '%(to)s %(from)s' % {
+                    'from': quote(geojson_filename),
+                    'to':   quote(basename + '.gpkg')}
+
             try:
                 execute(cmd)
             except Exception as exc:
