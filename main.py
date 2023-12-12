@@ -5,6 +5,7 @@ from   os       import makedirs, unlink
 from   os.path  import abspath, dirname, exists, splitext
 import re
 from   shlex               import quote
+from   typing_extensions import Annotated
 
 import duckdb
 from   geojson          import (dumps,
@@ -47,6 +48,18 @@ def ot_to_json(other_tag, remove_sub=True):
     return out
 
 
+def num_rows_by_type(osm_file: str, layer: str):
+    con = duckdb.connect(database=":memory:")
+    con.execute('LOAD spatial');
+    sql = """SELECT COUNT(*)
+             FROM ST_READ(?,
+                          open_options=['INTERLEAVED_READING=YES'],
+                          layer=?,
+                          sequential_layer_scan=true)"""
+
+    return con.sql(sql, params=(osm_file, layer)).fetchone()[0]
+
+
 def get_geom_by_type(osm_file: str, layer: str):
     con = duckdb.connect(database=":memory:")
     con.execute('LOAD spatial');
@@ -57,12 +70,13 @@ def get_geom_by_type(osm_file: str, layer: str):
                           layer=?,
                           sequential_layer_scan=true)"""
 
-    con.execute(sql, (osm_file, layer))
+    res = con.sql(sql, params=(osm_file, layer))
 
-    # WIP: The 1.8 GB Japan OSM PBF exceeded 32 GB of RAM when returning
-    # every row at once. Find a cursor / iterator method of doing this
-    # instead.
-    return con.fetchall()
+    while True:
+        try:
+            yield res.fetchone()
+        except StopIteration:
+            return
 
 
 def lines(other_tags:dict, other_tags_no_subs:dict):
@@ -276,19 +290,33 @@ def points(other_tags:dict, other_tags_no_subs:dict):
 
 
 @app.command()
-def main(osm_file:  str,
-         geom_type: str = None,
-         only_h3:   str = None):
-    h3_poly = None if only_h3 is None \
-                   else Polygon(list(h3.h3_to_geo_boundary(only_h3)))
+def main(osm_file:  Annotated[str,
+                              typer.Argument(
+                                 help="GeoFabrik .osm.pbf filename")],
+         geom_type: Annotated[str,
+                              typer.Option(
+                                help="Either line, multilinestring, "
+                                     "multipolygon or points")] = None,
+         only_h3:   Annotated[str,
+                              typer.Option(
+                                  help="Comma-delimited H3 "
+                                       "indices in 15-character "
+                                       "hexadecimal form. Find IDs with "
+                                       "https://what-the-h3index.vercel.app/")]
+                                          = None):
+    h3_polys = []
 
-    # WIP: Would it be more performant to filter in DuckDB instead?
-    if h3_poly:
-        # Form a closed polygon
-        polygon = ['%s %s' % (y, x)
-                   for x, y in h3_poly['coordinates'] +
-                               [h3_poly['coordinates'][0]]]
-        h3_poly = shape(wkt.loads('POLYGON((%s))' % ', '.join(polygon)))
+    if only_h3:
+        for h3_id in only_h3.split(','):
+            poly_ = Polygon(list(h3.h3_to_geo_boundary(h3_id.strip())))
+
+            # Form a closed polygon
+            polygon = ['%s %s' % (y, x)
+                       for x, y in poly_['coordinates'] +
+                                   [poly_['coordinates'][0]]]
+            h3_polys.append(
+                shape(
+                    wkt.loads('POLYGON((%s))' % ', '.join(polygon))))
 
     # Make sure there is an osmconf.ini file in the working folder.
     _osm_conf = 'osmconf.ini'
@@ -308,11 +336,16 @@ def main(osm_file:  str,
 
         file_handles = {}
 
+        num_rows = num_rows_by_type(osm_file, geom_type_)
+
         for rec in track(get_geom_by_type(osm_file, geom_type_),
-                         description='Categorising (%s)..' % geom_type_):
+                         description='Categorising (%s)..' % geom_type_,
+                         total=num_rows):
             geom = shape(wkt.loads(rec[1]))
 
-            if only_h3 and not h3_poly.contains(geom.centroid):
+            # WIP: Would it be more performant to filter in DuckDB instead?
+            if only_h3 and not any(x.contains(geom.centroid)
+                                   for x in h3_polys):
                 continue
 
             other_tags         = ot_to_json(rec[0], remove_sub=False)
@@ -324,7 +357,8 @@ def main(osm_file:  str,
                                    category.replace('-', '_'))\
                                 .lower()\
                                 .strip('_')\
-                                .strip('-')
+                                .strip('-')\
+                                .strip()
 
             if len(geom_category) < 1:
                 continue
