@@ -73,10 +73,12 @@ def get_geom_by_type(osm_file: str, layer: str):
     res = con.sql(sql, params=(osm_file, layer))
 
     while True:
-        try:
-            yield res.fetchone()
-        except StopIteration:
+        rec = res.fetchone()
+
+        if rec is None:
             return
+
+        yield rec
 
 
 def lines(other_tags:dict, other_tags_no_subs:dict):
