@@ -39,3 +39,7 @@ $ ls -lhS lines/building/ | head
 2.2M ... school.gpkg
 1.1M ... greenhouse.gpkg
 ```
+
+The following is a rendering of a few of the GeoPackage files generated in QGIS:
+
+![Tokyo QGIS](tokyo_qgis.jpg)
