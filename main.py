@@ -332,6 +332,8 @@ def main(osm_file:  Annotated[str,
         'multipolygons':    multipolygons,
         'points':           points}
 
+    # WIP: Could these be run over multiple threads at the same time?
+    # What would RAM consumption look like?
     for geom_type_ in categorisers.keys():
         if geom_type and (geom_type != geom_type_):
             continue
