@@ -1,6 +1,6 @@
 # osm_split
 
-Extract Features from OSM PBF files into feature-specific, named GeoPackage Files.
+Extract Features from OpenStreetMap (OSM) PBF files into feature-specific, named GeoPackage Files.
 
 Please read https://tech.marksblogg.com/extracting-osm-features.html for installation and usage instructions.
 
