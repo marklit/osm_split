@@ -16,7 +16,7 @@ $ python main.py \
     kanto-latest.osm.pbf
 ```
 
-Here are a few of the resulting GeoPackage files.
+The 2024-01-20 PBF file produced 1,374 GeoPackage files. Here are a few of them.
 
 ```
 $ ls -lht */electric*
