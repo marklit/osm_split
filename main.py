@@ -50,7 +50,8 @@ def ot_to_json(other_tag, remove_sub=True):
 
 def num_rows_by_type(osm_file: str, layer: str):
     con = duckdb.connect(database=":memory:")
-    con.execute('LOAD spatial');
+    con.execute('INSTALL spatial')
+    con.execute('LOAD spatial')
     sql = """SELECT COUNT(*)
              FROM ST_READ(?,
                           open_options=['INTERLEAVED_READING=YES'],
@@ -62,7 +63,8 @@ def num_rows_by_type(osm_file: str, layer: str):
 
 def get_geom_by_type(osm_file: str, layer: str):
     con = duckdb.connect(database=":memory:")
-    con.execute('LOAD spatial');
+    con.execute('INSTALL spatial')
+    con.execute('LOAD spatial')
     sql = """SELECT other_tags,
                     st_astext(geom)
              FROM ST_READ(?,
