@@ -384,13 +384,18 @@ def main(osm_file:  Annotated[str,
             if len(geom_category) < 1:
                 continue
 
+            override_geom_type_ = None
+
             if polygon_buildings and \
                'building' in geom_category and \
                geom_type_ != 'multipolygons':
                 geom = MultiPolygon(polygonize(geom))
-                geom_type_ = 'multipolygons'
+                override_geom_type_ = 'multipolygons'
 
-            basename = '%s/%s' % (geom_type_, geom_category)
+            basename = '%s/%s' % (geom_type_
+                                  if not override_geom_type_
+                                  else override_geom_type_,
+                                  geom_category)
 
             folder = '/'.join(basename.split('/')[:-1])
 
