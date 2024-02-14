@@ -55,5 +55,5 @@ This project uses DuckDB which has had significant improvements between each of 
 If you already have a virtual environment installed then every few weeks, run the following to update the dependencies.
 
 ```bash
-$ pip install -Ur ~/osm_split/requirements.txt
+$ pip install -Ur requirements.txt
 ```
