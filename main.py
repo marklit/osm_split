@@ -4,7 +4,7 @@ import json
 from   os       import makedirs, unlink
 from   os.path  import abspath, dirname, exists, splitext
 import re
-from   shlex               import quote
+from   shlex             import quote
 from   typing_extensions import Annotated
 
 import duckdb
