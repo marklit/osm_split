@@ -47,3 +47,13 @@ $ ls -lhS lines/building/ | head
 The following is a rendering of a few of the GeoPackage files generated in QGIS:
 
 ![Tokyo QGIS](tokyo_qgis.jpg)
+
+## Upgrading Dependencies
+
+This project uses DuckDB which has had significant improvements between each of its releases. These releases happen every few weeks to months so it is worth keeping it, as well as the other dependencies, up to date.
+
+If you already have a virtual environment installed then every few weeks, run the following to update the dependencies.
+
+```bash
+$ pip install -Ur ~/osm_split/requirements.txt
+```
