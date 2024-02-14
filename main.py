@@ -14,7 +14,8 @@ from   geojson          import (dumps,
 import h3
 from   rich.progress    import track
 from   shapely          import wkt
-from   shapely.geometry import shape
+from   shapely.geometry import MultiPolygon, shape
+from   shapely.ops      import polygonize
 from   shpyx            import run as execute
 import typer
 
@@ -293,21 +294,34 @@ def points(other_tags:dict, other_tags_no_subs:dict):
     return category
 
 
+def other_relations(other_tags:dict, other_tags_no_subs:dict):
+    if 'type' in other_tags_no_subs.keys():
+        return other_tags_no_subs['type']
+
+    return 'other'
+
+
 @app.command()
 def main(osm_file:  Annotated[str,
                               typer.Argument(
                                  help="GeoFabrik .osm.pbf filename")],
          geom_type: Annotated[str,
                               typer.Option(
-                                help="Either line, multilinestring, "
-                                     "multipolygon or points")] = None,
+                                help="line, multilinestring, "
+                                     "multipolygon, points or "
+                                     "other_relations")] = None,
          only_h3:   Annotated[str,
                               typer.Option(
                                   help="Comma-delimited H3 "
                                        "indices in 15-character "
                                        "hexadecimal form. Find IDs with "
                                        "https://what-the-h3index.vercel.app/")]
-                                          = None):
+                                          = None,
+         polygon_buildings: Annotated[bool,
+                              typer.Option(
+                                help="Buildings in LINESTRING or POINTS "
+                                     "form will be converted "
+                                     "into POLYGONS")] = False):
     h3_polys = []
 
     if only_h3:
@@ -332,7 +346,8 @@ def main(osm_file:  Annotated[str,
         'lines':            lines,
         'multilinestrings': multilinestrings,
         'multipolygons':    multipolygons,
-        'points':           points}
+        'points':           points,
+        'other_relations':  other_relations}
 
     # WIP: Could these be run over multiple threads at the same time?
     # What would RAM consumption look like?
@@ -368,6 +383,12 @@ def main(osm_file:  Annotated[str,
 
             if len(geom_category) < 1:
                 continue
+
+            if polygon_buildings and \
+               'building' in geom_category and \
+               geom_type_ != 'multipolygons':
+                geom = MultiPolygon(polygonize(geom))
+                geom_type_ = 'multipolygons'
 
             basename = '%s/%s' % (geom_type_, geom_category)
 
