@@ -425,8 +425,8 @@ def main(osm_file:  Annotated[str,
             if exists('%s.gpkg' % basename):
                 unlink('%s.gpkg' % basename)
 
-            cmd = 'ogr2ogr -f GeoJSON ' \
-                  '%(to)s %(from)s' % {
+            cmd = 'ogr2ogr ' \
+                  '%(to)s -explodecollections -f GPKG %(from)s' % {
                     'from': quote(geojson_filename),
                     'to':   quote(basename + '.gpkg')}
 
