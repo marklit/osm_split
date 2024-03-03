@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import json
+
+# pylint: disable=C0116 C0209 R0916 R0912 R0915 R0914 C0201 R1732 W1514
+
+"Convert OpenStreetMap PBF files into feature-specific, named GeoPackage files"
+
 from   os       import makedirs, unlink
-from   os.path  import abspath, dirname, exists, splitext
+from   os.path  import exists, splitext
 import re
 from   shlex             import quote
 from   typing_extensions import Annotated
@@ -23,7 +27,7 @@ import typer
 app = typer.Typer(rich_markup_mode='rich')
 
 
-remove_ext = lambda filename: splitext(filename)[0]
+remove_ext = lambda filename: splitext(filename)[0] # pylint: disable=C3001
 
 
 def ot_to_json(other_tag, remove_sub=True):
@@ -294,7 +298,8 @@ def points(other_tags:dict, other_tags_no_subs:dict):
     return category
 
 
-def other_relations(other_tags:dict, other_tags_no_subs:dict):
+def other_relations(other_tags:dict, # pylint: disable=W0613
+                    other_tags_no_subs:dict):
     if 'type' in other_tags_no_subs.keys():
         return other_tags_no_subs['type']
 
@@ -340,7 +345,7 @@ def main(osm_file:  Annotated[str,
     _osm_conf = 'osmconf.ini'
 
     if not exists(_osm_conf):
-        open(_osm_conf, 'w').write('')
+        open(_osm_conf, 'w').write('') # pylint: disable=R1732 W1514
 
     categorisers = {
         'lines':            lines,
@@ -351,7 +356,7 @@ def main(osm_file:  Annotated[str,
 
     # WIP: Could these be run over multiple threads at the same time?
     # What would RAM consumption look like?
-    for geom_type_ in categorisers.keys():
+    for geom_type_ in categorisers.keys(): # pylint: disable=C0206
         if geom_type and (geom_type != geom_type_):
             continue
 
@@ -432,7 +437,7 @@ def main(osm_file:  Annotated[str,
 
             try:
                 execute(cmd)
-            except Exception as exc:
+            except Exception as exc: # pylint: disable=W0718
                 # WIP: free(): invalid pointer
                 # I'm running a dodgy build from GDAL's main branch
                 if 'invalid pointer' not in str(exc):
