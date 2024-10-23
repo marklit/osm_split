@@ -1,6 +1,6 @@
 duckdb
 geojson
-h3
+h3<4
 rich
 shapely
 shpyx
